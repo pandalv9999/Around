@@ -47,6 +47,7 @@ func main() {
 
 	// Connect to the elasticsearch server
 	client, err := elastic.NewClient(
+		elastic.SetSniff(false),
 		elastic.SetURL(esUrl),
 		elastic.SetBasicAuth("elastic", password))
 	if err != nil {
