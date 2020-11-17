@@ -34,11 +34,12 @@ func getEnvVars() {
 func readFromElasticSearch(query elastic.Query, Index string) (*elastic.SearchResult, error) {
 	getEnvVars()
 	esUrl := os.Getenv("ELASTIC_SEARCH_URL")
+	username := os.Getenv("ELASTIC_SEARCH_USERNAME")
 	password := os.Getenv("ELASTIC_SEARCH_PASSWORD")
 	client, err := elastic.NewClient(
 		elastic.SetSniff(false),
 		elastic.SetURL(esUrl),
-		elastic.SetBasicAuth("elastic", password))
+		elastic.SetBasicAuth(username, password))
 
 	if err != nil {
 		return nil, err

@@ -40,6 +40,7 @@ func main() {
 	// get credentials from local environment
 	getEnvVars()
 	esUrl := os.Getenv("ELASTIC_SEARCH_URL")
+	username := os.Getenv("ELASTIC_SEARCH_USERNAME")
 	password := os.Getenv("ELASTIC_SEARCH_PASSWORD")
 
 	fmt.Println(esUrl)
@@ -49,7 +50,7 @@ func main() {
 	client, err := elastic.NewClient(
 		elastic.SetSniff(false),
 		elastic.SetURL(esUrl),
-		elastic.SetBasicAuth("elastic", password))
+		elastic.SetBasicAuth(username, password))
 	if err != nil {
 		panic(err)
 	}
