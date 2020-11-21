@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/olivere/elastic"
 	"os"
@@ -51,4 +52,29 @@ func readFromElasticSearch(query elastic.Query, Index string) (*elastic.SearchRe
 	}
 
 	return searchResult, nil
+}
+
+func saveToElasticSearch(i interface{}, index string, id string) error {
+	getEnvVars()
+	esUrl := os.Getenv("ELASTIC_SEARCH_URL")
+	username := os.Getenv("ELASTIC_SEARCH_USERNAME")
+	password := os.Getenv("ELASTIC_SEARCH_PASSWORD")
+	client, err := elastic.NewClient(
+		elastic.SetSniff(false),
+		elastic.SetURL(esUrl),
+		elastic.SetBasicAuth(username, password))
+
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Index().Index(index).Id(id).BodyJson(i).Do(context.Background())
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Post is saved to Elasticsearch: %s\n", id)
+	return nil
+
+
 }

@@ -1,7 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"github.com/pborman/uuid"
+
 	"github.com/olivere/elastic"
+	"mime/multipart"
 	"reflect"
 )
 
@@ -50,3 +54,20 @@ func getPostFromSearchResult(searchResult *elastic.SearchResult) []Post {
 
 	return posts
 }
+
+func savePost(post *Post, file multipart.File) error {
+	id := uuid.New()
+	medialink, err := saveToGCS(file, id)
+	if err != nil {
+		return err
+	}
+	post.Url = medialink
+
+	err = saveToElasticSearch(post, PostIndex, id)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Post is saved to Elasticsearch: %s\n", post.Message)
+	return nil
+}
+

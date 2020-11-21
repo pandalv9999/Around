@@ -4,17 +4,58 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path/filepath"
+
 )
 
+
+var (
+	mediaTypes = map[string]string{
+		".jpeg": "image",
+		".jpg":  "image",
+		".gif":  "image",
+		".png":  "image",
+		".mov":  "video",
+		".mp4":  "video",
+		".avi":  "video",
+		".flv":  "video",
+		".wmv":  "video",
+	}
+)
+
+
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Received one post request")
-	decoder := json.NewDecoder(r.Body)
-	var p Post
-	if err := decoder.Decode(&p); err != nil {
-		panic(err)
+	fmt.Println("Received one upload request")
+	w.Header().Set("Content-Type", "application/json")
+
+	p := Post{
+		User:    r.FormValue("user"),
+		Message: r.FormValue("message"),
 	}
 
-	_, _ = fmt.Fprintf(w, "Post received: %s\n", p.Message)
+	file, header, err := r.FormFile("media_file")
+	if err != nil {
+		http.Error(w, "Media file is not available", http.StatusBadRequest)
+		fmt.Printf("Media file is not available %v\n", err)
+		return
+	}
+
+	suffix := filepath.Ext(header.Filename)
+	if t, ok := mediaTypes[suffix]; ok {
+		p.Type = t
+	} else {
+		p.Type = "unknown"
+	}
+
+	err = savePost(&p, file)
+	if err != nil {
+		http.Error(w, "Failed to save post to GCS or Elasticsearch", http.StatusInternalServerError)
+		fmt.Printf("Failed to save post to GCS or Elasticsearch %v\n", err)
+		return
+	}
+
+	fmt.Println("Post is saved successfully.")
+
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
